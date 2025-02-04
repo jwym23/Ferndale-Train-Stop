@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Traffic Tracker</title>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        h1 { color: #2c3e50; }
+        #trafficStatus { font-size: 24px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Live Traffic Congestion Tracker</h1>
+    <p>Tracking traffic at a specific location every 3 minutes.</p>
+    <p><strong>Location:</strong> Ferndale, MI (Adjust lat/lng in script)</p>
+    
+    <div id="trafficStatus">Loading...</div>
+
+    <script>
+        const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";  // Replace with your actual API key
+        const lat = 42.2739;  // Replace with your desired location's latitude
+        const lon = -83.0727; // Replace with your desired location's longitude
+        const updateInterval = 180000; // 3 minutes in milliseconds
+
+        function getTrafficData() {
+            const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${lat},${lon}&destination=${lat},${lon}&departure_time=now&key=${apiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                        const leg = data.routes[0].legs[0];
+                        const normalTime = leg.duration.value; // Normal time in seconds
+                        const trafficTime = leg.duration_in_traffic.value; // Time in traffic in seconds
+                        const congestionLevel = ((trafficTime / normalTime) * 100).toFixed(2); // % increase
+
+                        document.getElementById("trafficStatus").innerHTML = 
+                            `🚦 Traffic Congestion: <strong>${congestionLevel}%</strong>`;
+                    } else {
+                        document.getElementById("trafficStatus").innerHTML = "⚠️ Unable to fetch traffic data.";
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("trafficStatus").innerHTML = "❌ Error fetching traffic data.";
+                    console.error("Traffic API Error:", error);
+                });
+        }
+
+        // Run the function every 3 minutes
+        getTrafficData();
+        setInterval(getTrafficData, updateInterval);
+    </script>
+
+</body>
+</html>
